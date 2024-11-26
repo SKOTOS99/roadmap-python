@@ -3,50 +3,37 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - main  # Se ejecuta cuando hay un push a la rama principal
+      - main
   pull_request:
     branches:
-      - main  # Se ejecuta cuando se crea un pull request hacia la rama principal
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
-    services:
-      docker:
-        image: docker:19.03.12
-        options: --privileged
-        ports:
-          - 5000:5000
-          - 8080:8080
-
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2  # Hacer checkout del código
+        uses: actions/checkout@v2
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1  # Configurar Docker Buildx para compilación avanzada
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
 
-      - name: Cache Docker layers
-        uses: actions/cache@v2
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-
-      - name: Build and push Docker images
+      - name: Install Docker Compose
         run: |
-          docker-compose -f docker-compose.yml build  # Construir las imágenes de Docker
-          docker-compose -f docker-compose.yml up -d  # Iniciar los contenedores en segundo plano
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      - name: Build and Run Containers
+        run: |
+          docker-compose -f docker-compose.yml build
+          docker-compose -f docker-compose.yml up -d
 
       - name: Run Tests (Flask)
-        run: |
-          curl -X GET http://localhost:5000/api/tareas  # Test de la API de Flask
+        run: curl -X GET http://localhost:5000/api/tareas
 
       - name: Run Tests (Spring Boot)
-        run: |
-          curl -X GET http://localhost:8080/api/tareas  # Test de la API de Spring Boot
+        run: curl -X GET http://localhost:8080/api/tareas
 
-      - name: Clean up
-        run: docker-compose down  # Detener y eliminar los contenedores
+      - name: Clean Up
+        run: docker-compose down

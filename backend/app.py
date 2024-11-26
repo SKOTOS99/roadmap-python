@@ -1,7 +1,7 @@
 
 from flask import Flask, request, jsonify
 
-from backend.service.TaskService import TaskService
+from service.TaskService import TaskService
 
 app = Flask(__name__)
 
@@ -47,4 +47,4 @@ def update_tasks(id):
         return jsonify({"error":"no se pudo actualizar"}), 400
 
 if __name__ == "__main__":
-    app.run()
+    app.run(host="0.0.0.0", port=5000)
